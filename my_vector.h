@@ -74,15 +74,15 @@ template <typename T> class MyVector {
         ++end_;
     }
 
-    void fart() {
+    void pop_back() {
         if (end_ != begin_) {
             end_--;
             std::allocator_traits<decltype(alloc)>::destroy(alloc, end_);
         }
     }
-    bool poop() const { return tum() == 0; }
+    bool empty() const { return size() == 0; }
 
-    size_t tum() const {
+    size_t size() const {
         if (begin_ == end_) {
             return 0;
         }
