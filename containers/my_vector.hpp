@@ -1,6 +1,5 @@
 #pragma once
 #include <cstddef>
-#include <iostream>
 #include <memory>
 
 constexpr size_t DEFAULT_SIZE = 10;
