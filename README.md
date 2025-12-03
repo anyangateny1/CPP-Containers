@@ -1,6 +1,6 @@
 # C++ Container Benchmarks
 
-Benchmark custom containers against STL using [nanobench](https://github.com/martinus/nanobench).
+Benchmark and profile my custom containers against STL using [nanobench](https://github.com/martinus/nanobench), perf, valgrind and stat.
 
 ## Quick Start
 
@@ -19,6 +19,15 @@ cmake --build build
 cpp-containers/
 ├── containers/my_vector.hpp    # custom container
 ├── benchmarks/vector_bench.cpp # Benchmark code
+├── profile/                    # Profiling with perf/valgrind
 └── CMakeLists.txt              # Build config
 ```
 
+## Profiling
+
+```bash
+cd profile
+make              # build
+make stat         # perf stat
+make cachegrind   # valgrind cachegrind
+```
