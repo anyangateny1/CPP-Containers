@@ -88,6 +88,48 @@ template <typename T> class MyVector {
         return (end_ - begin_);
     }
 
+    size_t capacity() const noexcept {
+        if (!begin_) {
+            return 0;
+        }
+
+        return static_cast<size_t>(cap_ - begin_);
+    }
+
+    void reserve(size_t reserve_cap) {
+        size_t old_cap = capacity();
+        if (reserve_cap <= old_cap)
+            return;
+
+        T* new_begin = alloc.allocate(reserve_cap);
+        T* new_end = new_begin;
+
+        try {
+            for (T* p = begin_; p != end_; ++p, ++new_end) {
+                std::allocator_traits<decltype(alloc)>::construct(alloc, new_end,
+                                                                  std::move_if_noexcept(*p));
+            }
+        } catch (...) {
+            for (T* p = new_begin; p != new_end; ++p) {
+                std::allocator_traits<decltype(alloc)>::destroy(alloc, p);
+            }
+            alloc.deallocate(new_begin, reserve_cap);
+            throw;
+        }
+
+        for (T* p = begin_; p != end_; ++p) {
+            std::allocator_traits<decltype(alloc)>::destroy(alloc, p);
+        }
+        if (begin_) {
+            alloc.deallocate(begin_, old_cap);
+        }
+
+        begin_ = new_begin;
+        end_ = new_end;
+        cap_ = new_begin + reserve_cap;
+    }
+
+
   private:
     std::allocator<T> alloc;
     T* begin_;
