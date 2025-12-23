@@ -4,6 +4,9 @@
 
 template <typename T> class MyVector {
   public:
+    using Alloc = std::allocator<T>;
+    using Traits = std::allocator_traits<Alloc>;
+
     MyVector() : begin_(nullptr), end_(nullptr), cap_(nullptr) {}
     MyVector(const MyVector& other) : begin_(nullptr), end_(nullptr), cap_(nullptr) {
         size_t capacity = static_cast<size_t>(other.cap_ - other.begin_);
@@ -14,7 +17,7 @@ template <typename T> class MyVector {
 
         try {
             for (T* p = other.begin_; p != other.end_; ++p, ++end_) {
-                std::allocator_traits<decltype(alloc)>::construct(alloc, end_, *p);
+                Traits::construct(alloc, end_, *p);
             }
         } catch (...) {
             destroy_storage();
@@ -35,7 +38,7 @@ template <typename T> class MyVector {
         }
         if (begin_) {
             for (T* p = begin_; p != end_; ++p)
-                std::allocator_traits<decltype(alloc)>::destroy(alloc, p);
+                Traits::destroy(alloc, p);
             alloc.deallocate(begin_, cap_ - begin_);
         }
 
@@ -67,21 +70,21 @@ template <typename T> class MyVector {
         if (end_ == cap_) {
             allocate_more_storage();
         }
-        std::allocator_traits<decltype(alloc)>::construct(alloc, end_, element);
+        Traits::construct(alloc, end_, element);
         ++end_;
     }
 
     void push_back(T&& element) {
         if (end_ == cap_)
             allocate_more_storage();
-        std::allocator_traits<decltype(alloc)>::construct(alloc, end_, std::move(element));
+        Traits::construct(alloc, end_, std::move(element));
         ++end_;
     }
 
     void pop_back() {
         if (end_ != begin_) {
             end_--;
-            std::allocator_traits<decltype(alloc)>::destroy(alloc, end_);
+            Traits::destroy(alloc, end_);
         }
     }
     bool empty() const noexcept { return size() == 0; }
@@ -100,19 +103,18 @@ template <typename T> class MyVector {
 
         try {
             for (T* p = begin_; p != end_; ++p, ++new_end) {
-                std::allocator_traits<decltype(alloc)>::construct(alloc, new_end,
-                                                                  std::move_if_noexcept(*p));
+                Traits::construct(alloc, new_end, std::move_if_noexcept(*p));
             }
         } catch (...) {
             for (T* p = new_begin; p != new_end; ++p) {
-                std::allocator_traits<decltype(alloc)>::destroy(alloc, p);
+                Traits::destroy(alloc, p);
             }
             alloc.deallocate(new_begin, reserve_cap);
             throw;
         }
 
         for (T* p = begin_; p != end_; ++p) {
-            std::allocator_traits<decltype(alloc)>::destroy(alloc, p);
+            Traits::destroy(alloc, p);
         }
         if (begin_) {
             alloc.deallocate(begin_, old_cap);
@@ -125,7 +127,7 @@ template <typename T> class MyVector {
 
 
   private:
-    std::allocator<T> alloc;
+    Alloc alloc;
     T* begin_;
     T* end_;
     T* cap_;
@@ -145,7 +147,7 @@ template <typename T> class MyVector {
         if (begin_ == nullptr)
             return;
         for (T* p = begin_; p != end_; ++p) {
-            std::allocator_traits<decltype(alloc)>::destroy(alloc, p);
+            Traits::destroy(alloc, p);
         }
         alloc.deallocate(begin_, cap_ - begin_);
         begin_ = end_ = cap_ = nullptr;
