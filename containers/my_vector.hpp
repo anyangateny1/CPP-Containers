@@ -125,6 +125,35 @@ template <typename T> class MyVector {
         cap_ = new_begin + reserve_cap;
     }
 
+    void shrink_to_fit() {
+        size_t size = end_ - begin_;
+        size_t capacity = cap_ - begin_;
+
+        if (size == capacity)
+            return;
+
+        T* new_begin = alloc.allocate(size);
+        T* new_end = new_begin;
+
+        try {
+            for (T* p = begin_; p != end_; ++p, ++new_end)
+                Traits::construct(alloc, new_end, std::move_if_noexcept(*p));
+        } catch (...) {
+            for (T* p = new_begin; p != new_end; ++p)
+                Traits::destroy(alloc, p);
+            alloc.deallocate(new_begin, size);
+            throw;
+        }
+
+        for (T* p = begin_; p != end_; ++p)
+            Traits::destroy(alloc, p);
+        alloc.deallocate(begin_, capacity);
+
+        begin_ = new_begin;
+        end_ = new_begin + size;
+        cap_ = end_;
+    }
+
 
   private:
     Alloc alloc;
